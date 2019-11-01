@@ -143,7 +143,6 @@ func guestCREATE(c *Config, guest_name string, disk_store string,
 				fmt.Sprintf("ide1:0.fileName = \\\"%s\\\"\n", isofilename) +
 				fmt.Sprintf("ide1:0.deviceType = \\\"cdrom-image\\\"\n")
 		}
-
 		//
 		//  Write vmx file to esxi host
 		//
@@ -199,23 +198,24 @@ func guestCREATE(c *Config, guest_name string, disk_store string,
 			net_param = " --network='" + virtual_networks[0][0] + "'"
 		}
 
-		extra_params := "--X:injectOvfEnv --allowExtraConfig "
-		if (strings.HasSuffix(src_path, ".ova") || strings.HasSuffix(src_path, ".ovf")) {
-			// in order to process any OVF params, guest should be immediately powered on
-			// This is because the ESXi host doesn't have a cache to store the OVF parameters, like the vCenter Server does.
-			// Therefore, you MUST use the ‘--X:injectOvfEnv’ debug option with the ‘--poweron’ option
-			extra_params = extra_params + "--powerOn "
+		extra_params := ""
+		// extra_params := "--X:injectOvfEnv --allowExtraConfig "
+		// if (strings.HasSuffix(src_path, ".ova") || strings.HasSuffix(src_path, ".ovf")) {
+		// 	// in order to process any OVF params, guest should be immediately powered on
+		// 	// This is because the ESXi host doesn't have a cache to store the OVF parameters, like the vCenter Server does.
+		// 	// Therefore, you MUST use the ‘--X:injectOvfEnv’ debug option with the ‘--poweron’ option
+		// 	extra_params = extra_params + "--powerOn "
 
-			if (strings.HasSuffix(src_path, ".ova")) {
-    			extra_params = extra_params + "--sourceType=OVA "
-			} else {
-    			extra_params = extra_params + "--sourceType=OVF "
-			}
+		// 	if (strings.HasSuffix(src_path, ".ova")) {
+    	// 		extra_params = extra_params + "--sourceType=OVA "
+		// 	} else {
+    	// 		extra_params = extra_params + "--sourceType=OVF "
+		// 	}
 
-            for ovf_prop_name, ovf_prop_value := range ovf_properties {
-                extra_params = fmt.Sprintf("%s  --prop:%s=\"%s\"", extra_params, ovf_prop_name, ovf_prop_value)
-            }
-		}
+        //     for ovf_prop_name, ovf_prop_value := range ovf_properties {
+        //         extra_params = fmt.Sprintf("%s  --prop:%s=\"%s\"", extra_params, ovf_prop_name, ovf_prop_value)
+        //     }
+		// }
 
 		ovf_cmd := fmt.Sprintf("ovftool --acceptAllEulas --noSSLVerify --X:useMacNaming=false %s "+
 			"-dm=%s --name='%s' --overwrite -ds='%s' %s '%s' '%s'",extra_params, boot_disk_type, guest_name, disk_store, net_param, src_path, dst_path)
@@ -312,7 +312,7 @@ func guestCREATE(c *Config, guest_name string, disk_store string,
 	//
 	//  make updates to vmx file
 	//
-	err = updateVmx_contents(c, vmid, true, memsize, numvcpus, virthwver, guestos, virtual_networks, virtual_disks, notes, guestinfo)
+	err = updateVmx_contents(c, vmid, true, memsize, numvcpus, virthwver, guestos, virtual_networks, virtual_disks, notes, guestinfo, ovf_properties)
 	if err != nil {
 		return vmid, err
 	}
